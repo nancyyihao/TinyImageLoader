@@ -249,6 +249,7 @@ public class TinyImageLoader {
             return true ;
         } catch (IOException e) {
             Log.e(TAG, "download bitmap failed." + e) ;
+            e.printStackTrace();
         } finally {
             if (urlConnection != null) {
                 urlConnection.disconnect();
@@ -266,6 +267,7 @@ public class TinyImageLoader {
         BufferedInputStream bis = null ;
         try {
             final URL url = new URL(urlString) ;
+            urlConnection = (HttpURLConnection) url.openConnection();
             bis = new BufferedInputStream(urlConnection.getInputStream(), IO_BUFFER_SIZE);
             bitmap = BitmapFactory.decodeStream(bis);
         } catch (Exception e) {
