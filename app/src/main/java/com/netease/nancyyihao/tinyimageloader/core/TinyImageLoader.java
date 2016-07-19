@@ -9,8 +9,11 @@ import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
 import android.os.StatFs;
+import android.provider.ContactsContract;
 import android.util.Log;
 import android.widget.ImageView;
+
+import com.netease.nancyyihao.tinyimageloader.R;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
@@ -44,8 +47,10 @@ public class TinyImageLoader {
     private static final int DISK_CACHE_SIZE = 50 * 1024 * 1024;  // default size is 50MB
     private static final int IO_BUFFER_SIZE = 8 * 1024 ;
     private static final int DISK_CACHE_INDEX = 0 ;
-    private static final int TAG_KEY_URL = 0x0af23d ;//R.id.tinyimageloader_url;
+    private static final int TAG_KEY_URL = R.id.square_image_view ;//R.id.tinyimageloader_url;
     private boolean mIsDIskLruCacheCreated = false ;
+
+    private static final int MESSAGE_RESULT = 1;
 
     private static final ThreadFactory sThreadFatory = new ThreadFactory() {
         private final AtomicInteger mCount = new AtomicInteger(1) ;
@@ -68,6 +73,15 @@ public class TinyImageLoader {
         @Override
         public void handleMessage(Message msg) {
             // TODO handler message
+            Result result = (Result) msg.obj;
+            ImageView imageView = result.imageview ;
+            String url = (String) imageView.getTag(TAG_KEY_URL);
+            //imageView.setImageBitmap(result.bitmap);
+            if (url.equals(result.url)) {
+                imageView.setImageBitmap(result.bitmap);
+            } else {
+                Log.e(TAG, "set image bitmap, but url has changed, ignored!");
+            }
         }
     } ;
 
@@ -137,6 +151,9 @@ public class TinyImageLoader {
                 Bitmap bitmap = loadBitmap(url, reqWidth, reqHieght) ;
                 if (bitmap != null) {
                     // TODO handler result
+                    Result result = new Result(url, bitmap, imageView) ;
+                    mMainHandler.obtainMessage(MESSAGE_RESULT, result).sendToTarget();
+
                 }
             }
         } ;
@@ -302,6 +319,18 @@ public class TinyImageLoader {
             cacheKey = String.valueOf(url.hashCode()) ;
         }
         return cacheKey ;
+    }
+
+    private static class Result {
+        private String url ;
+        private Bitmap bitmap ;
+        private ImageView imageview ;
+
+        public Result(String url, Bitmap bitmap, ImageView imageview) {
+            this.url = url;
+            this.bitmap = bitmap;
+            this.imageview = imageview;
+        }
     }
 
     public static void closeQuietly(Closeable closeable) {
